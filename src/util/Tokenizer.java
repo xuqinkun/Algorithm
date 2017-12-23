@@ -1,26 +1,33 @@
 package util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class RegualrExpression {
-	private static final Set<String> OPERATOR = new HashSet<String>(Arrays.asList("+","-","*","/"));
-	
-//	public static double [] parseNum(String exp) {
-//		String regex = getRegex();
-//		String[] strNum = exp.split(regex);
-//		double [] nums = new double[strNum.length];
-//		for (int i = 0; i < strNum.length; i++) {
-//			nums[i] = Double.parseDouble(strNum[i]);
-//		}
-//		return nums;
-//	}
+public class Tokenizer {
+	private static final Set<String> OPERATOR = new HashSet<String>(Arrays.asList("(",")","+","-","*","/"));
 
+	public static String[] getTokens(String src, String regex) {
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(src);
+		List<String> list = new ArrayList<>();
+		while (m.find()) {
+			list.add(m.group());
+		}
+		int size = list.size();
+		String[] tokens = new String[size];
+		for (int i = 0; i < size; i++) {
+			tokens[i] = list.get(i);
+		}
+		return tokens;
+	}
+	
 	public static Stack<Double> parseNumber(String exp) {
 		Pattern p = Pattern.compile("\\d+(\\.\\d+)?");
 		Matcher m = p.matcher(exp);
@@ -52,16 +59,8 @@ public class RegualrExpression {
 		String s = null;
 		while(m.find()) {
 			s = m.group();
-			System.out.println(s);
 			stack.push(s);
 		}
 		return stack;
-	}
-	
-	public static void main(String[] args) {
-		String exp = "1111+2.3-3*4+2.1";
-//		System.out.println(Arrays.toString(parseNum(exp)));
-//		Stack<String> stack = parseOperator(exp);
-		parseNumber(exp);
 	}
 }

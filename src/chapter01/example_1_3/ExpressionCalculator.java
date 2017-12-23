@@ -3,96 +3,95 @@ package chapter01.example_1_3;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.util.Stack;
+
+import util.Tokenizer;
 
 public class ExpressionCalculator {
 	
-	private Stack<Character> opStack = new Stack<>();
-	private Stack<Integer> numStack = new Stack<>();
-	private char [] ops = new char[]{'(',')','+','-','*','/'}; 
+//	private char [] ops = new char[]{'(',')','+','-','*','/'}; 
+//	private static final Set<String> OPERATOR = new HashSet<String>(Arrays.asList("(",")","+","-","*","/"));
 	
-	public void read() throws IOException {
+	public void calculate(int accuracy) throws IOException {
 		BufferedReader br = 
 				new BufferedReader(new InputStreamReader(System.in));
 		String line = null;
 		System.out.println("Input expression:");
 		while ((line = br.readLine()) != null) {
-			
-			if (line.equalsIgnoreCase("exit")) {
-				break;
-			}
-			if (!isValid(line)) {
+			if (isValid(line)) {
+				double result = calculate(line);
+				BigDecimal bd = new BigDecimal(result);
+				double fixedResult = bd.setScale(accuracy, BigDecimal.ROUND_HALF_UP).
+									doubleValue();
+				System.out.println(line + " = " + fixedResult);
+			} else {
 				System.out.println("Expression is not valid!");
-				continue;
 			}
-			
-			for (int i = 0; i < line.length(); i++) {
-				char c = line.charAt(i);
-				if (isOperator(c)) {
-					opStack.push(c);
-				}
-				if (Character.isDigit(c)) {
-					numStack.push(c - '0');
-				}
-			}
-			int result = calculate(opStack, numStack);
-			System.out.println(line + " = " + result);
 			System.out.println("Input expression:");
 		}
+		br.close();
+	}
+
+	public double calculate(String line) {
+		String regex = "([\\+\\-\\*\\/\\(\\)])|(\\d+(\\.\\d+)?)";
+		String[] tokens = Tokenizer.getTokens(line, regex);
+		Stack<String> ops = new Stack<>();
+		Stack<Double> nums = new Stack<>();
+		
+		int len = tokens.length;
+		for (int i = 0; i < len; i++) {
+			String token = tokens[i];
+			if (token.equals("(")) {
+				String op = ops.pop();
+				calculate(ops, nums);
+				ops.push(op);
+			}
+			else if (token.equals("+") || token.equals("-")
+						|| token.equals("*") || token.equals("/")) {
+				ops.push(token);
+			}
+			else if (token.equals(")")) {
+				calculate(ops, nums);
+			}
+			else {
+				nums.push(Double.parseDouble(token));
+			}
+		}
+		calculate(ops, nums);
+		Double result = nums.pop();
+		
+		return result;
 	}
 
 
-	public int calculate(Stack<Character> ops, Stack<Integer> nums) {
-		if (ops.isEmpty()) {
-			return nums.pop();
+	private void calculate(Stack<String> ops, Stack<Double> nums) {
+		if (ops.isEmpty()) return;
+		String op = ops.pop();
+		Double num1 = nums.pop();
+		Double num2 = nums.pop();
+		if (op.equals("*")) {
+			nums.push(num2 * num1);
 		}
-		Character op = ops.pop();
-		Integer num = nums.pop();
-		if (nums.isEmpty()) {
-			return num;
+		else if (op.equals("/")) {
+			nums.push(num2 / num1);
 		}
-		if (op == '+') return num + calculate(ops, nums);
-		else if (op == '-') return num - calculate(ops, nums);
-		else if (op == '*') {
-			Integer num2 = nums.pop();
-			nums.push(num * num2);
-			return calculate(ops, nums);
+		else if (op.equals("+")) {
+			nums.push(num2 + num1);
 		}
-		else if (op == '/') {
-			Integer num2 = nums.pop();
-			nums.push(num2 / num);
-			return calculate(ops, nums);
+		else if (op.equals("-")) {
+			nums.push(num2 - num1);
 		}
-		else 
-			return 0;
+		calculate(ops, nums);
 	}
-
 
 	private boolean isValid(String line) {
 		return true;
 	}
-
-	private boolean isOperator(char c) {
-		if (binarySearch(ops, c) >= 0) {
-			return true;
-		}
-		return false;
-	}
-	
-	private  int binarySearch(char[] src, char target) {
-		return binarySearch(src, target, 0, src.length - 1);
-	}
-	
-	private  int binarySearch(char[] src, char target, int lo, int hi) {
-		if (lo > hi) return -1;
-		int mid = (lo + hi) / 2;
-		if (src[mid] < target) return binarySearch(src, target, mid + 1, hi);
-		if (src[mid] > target) return binarySearch(src, target, lo, mid - 1);
-		return mid;
-	}
 	
 	public static void main(String[] args) throws IOException {
 		ExpressionCalculator calculator = new ExpressionCalculator();
-		calculator.read();
+		calculator.calculate(2);
+		
 	}
 }
