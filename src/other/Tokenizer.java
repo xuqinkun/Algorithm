@@ -1,4 +1,4 @@
-package util;
+package other;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,10 +12,10 @@ import java.util.regex.Pattern;
 
 public class Tokenizer {
 	private static final Set<String> OPERATOR = new HashSet<String>(Arrays.asList("(",")","+","-","*","/"));
-
+	private static final String NUMBER_REGEX = "\\d+(\\.\\d+)?";
+	
 	public static String[] getTokens(String src, String regex) {
-		Pattern p = Pattern.compile(regex);
-		Matcher m = p.matcher(src);
+		Matcher m = getMatcher(src, regex);
 		List<String> list = new ArrayList<>();
 		while (m.find()) {
 			list.add(m.group());
@@ -29,14 +29,19 @@ public class Tokenizer {
 	}
 	
 	public static Stack<Double> parseNumber(String exp) {
-		Pattern p = Pattern.compile("\\d+(\\.\\d+)?");
-		Matcher m = p.matcher(exp);
+		Matcher m = getMatcher(exp, NUMBER_REGEX);
 		Stack<Double> nums = new Stack<>();
 		while (m.find()) {
 			String d = m.group();
 			nums.push(Double.parseDouble(d));
 		}
 		return nums;
+	}
+
+	private static Matcher getMatcher(String exp, String regex) {
+		Pattern p = Pattern.compile(regex);
+		Matcher m = p.matcher(exp);
+		return m;
 	}
 	
 	private static String getRegex() {
@@ -62,5 +67,10 @@ public class Tokenizer {
 			stack.push(s);
 		}
 		return stack;
+	}
+	
+	public static boolean isDigit(String exp) {
+		Matcher m = getMatcher(exp, NUMBER_REGEX);
+		return m.matches();
 	}
 }

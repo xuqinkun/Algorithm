@@ -4,14 +4,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 
-import util.Tokenizer;
+import other.Tokenizer;
 
 public class ExpressionCalculator {
 	
 //	private char [] ops = new char[]{'(',')','+','-','*','/'}; 
-//	private static final Set<String> OPERATOR = new HashSet<String>(Arrays.asList("(",")","+","-","*","/"));
+	private static final Set<String> OPERATOR = new HashSet<String>(
+			Arrays.asList("+","-","*","/", "sin", "cos", "tan"));
 	
 	public void calculate(int accuracy) throws IOException {
 		BufferedReader br = 
@@ -34,7 +38,7 @@ public class ExpressionCalculator {
 	}
 
 	public double calculate(String line) {
-		String regex = "([\\+\\-\\*\\/\\(\\)])|(\\d+(\\.\\d+)?)";
+		String regex = getRegex();
 		String[] tokens = Tokenizer.getTokens(line, regex);
 		Stack<String> ops = new Stack<>();
 		Stack<Double> nums = new Stack<>();
@@ -42,47 +46,69 @@ public class ExpressionCalculator {
 		int len = tokens.length;
 		for (int i = 0; i < len; i++) {
 			String token = tokens[i];
-			if (token.equals("(")) {
+			if (token.equals("(") && i != 0) {
 				String op = ops.pop();
-				calculate(ops, nums);
+				doCalculate(ops, nums);
 				ops.push(op);
 			}
-			else if (token.equals("+") || token.equals("-")
-						|| token.equals("*") || token.equals("/")) {
+			else if (OPERATOR.contains(token)) {
 				ops.push(token);
 			}
 			else if (token.equals(")")) {
-				calculate(ops, nums);
+				doCalculate(ops, nums);
 			}
-			else {
+			else if (Tokenizer.isDigit(token)) {
 				nums.push(Double.parseDouble(token));
 			}
 		}
-		calculate(ops, nums);
+		doCalculate(ops, nums);
 		Double result = nums.pop();
 		
 		return result;
 	}
 
+	private String getRegex() {
+		String regex = "";
+		for (String op : OPERATOR) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("(");
+			if (op.length() == 1) {
+				sb.append("\\" + op);
+			} else {
+				sb.append(op);
+			}
+			sb.append(")");
+			regex += sb.toString() +"|";
+		}
+		regex += "(\\()|(\\))|(\\d+(\\.\\d+)?)";
+		return regex;
+	}
 
-	private void calculate(Stack<String> ops, Stack<Double> nums) {
+
+	private void doCalculate(Stack<String> ops, Stack<Double> nums) {
 		if (ops.isEmpty()) return;
 		String op = ops.pop();
 		Double num1 = nums.pop();
-		Double num2 = nums.pop();
 		if (op.equals("*")) {
-			nums.push(num2 * num1);
+			nums.push(nums.pop() * num1);
 		}
 		else if (op.equals("/")) {
-			nums.push(num2 / num1);
+			nums.push(nums.pop() / num1);
 		}
 		else if (op.equals("+")) {
-			nums.push(num2 + num1);
+			nums.push(nums.pop() + num1);
 		}
 		else if (op.equals("-")) {
-			nums.push(num2 - num1);
+			nums.push(nums.pop() - num1);
 		}
-		calculate(ops, nums);
+		else if (op.equals("sin")) {
+			nums.push(Math.sin(num1/180*Math.PI));
+		}
+		else if (op.equals("cos")) {
+			nums.push(Math.cos(num1/180*Math.PI));
+		}
+		
+		doCalculate(ops, nums);
 	}
 
 	private boolean isValid(String line) {
