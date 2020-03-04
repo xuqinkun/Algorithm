@@ -10,6 +10,6 @@ public class Euclid {
 	}
 	
 	public static void main(String[] args) {
-		System.out.println(gcd(10,3));
+		System.out.println(gcd(10,5));
 	}
 }
